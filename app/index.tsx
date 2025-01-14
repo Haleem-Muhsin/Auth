@@ -36,13 +36,13 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     borderRadius: 20,
     marginTop: 10,
-    backgroundColor: "#B7DCFF",
+    backgroundColor: "#DBE7C9",
   },
   container2: {
     flex: 1,
     alignItems: "center",
     marginHorizontal: 25,
     borderRadius: 20,
-    backgroundColor: "#B7DCFF",
+    backgroundColor: "#DBE7C9",
   },
 });
