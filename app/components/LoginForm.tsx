@@ -1,9 +1,87 @@
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, Alert, BackHandler } from "react-native";
 import Checkbox from 'expo-checkbox';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from "expo-router";
+import { auth } from '../firebase';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginForm() {
   const [isChecked, setIsChecked] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      Alert.alert(
+        'Sign Out',
+        'Are you sure you want to sign out?',
+        [
+          {
+            text: 'Cancel',
+            onPress: () => null,
+            style: 'cancel',
+          },
+          {
+            text: 'Sign Out',
+            onPress: handleSignOut,
+            style: 'destructive',
+          },
+        ],
+        { cancelable: true }
+      );
+      return true;
+    });
+
+    return () => backHandler.remove();
+  }, [router]);
+
+  useEffect(() => {
+    checkPersistedAuth();
+  }, []);
+
+  const checkPersistedAuth = async () => {
+    try {
+      const persistedAuth = await AsyncStorage.getItem('rememberMe');
+      if (persistedAuth === 'true' && auth.currentUser) {
+        router.push('/home');
+      }
+    } catch (error) {
+      console.error('Error checking auth state:', error);
+    }
+  };
+
+  const handleSignIn = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await signInWithEmailAndPassword(auth, email, password);
+      if (isChecked) {
+        await AsyncStorage.setItem('rememberMe', 'true');
+      }
+      router.push('/home');
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      await AsyncStorage.removeItem('rememberMe');
+      router.replace('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -17,6 +95,8 @@ export default function LoginForm() {
           placeholder="placeholder@gmail.com"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
         />
       </View>
 
@@ -26,6 +106,8 @@ export default function LoginForm() {
           style={styles.input}
           secureTextEntry
           placeholder="••••••••"
+          value={password}
+          onChangeText={setPassword}
         />
       </View>
 
@@ -44,8 +126,14 @@ export default function LoginForm() {
         </Pressable>
       </View>
 
-      <Pressable style={styles.signInButton}>
-        <Text style={styles.signInText}>Sign In</Text>
+      <Pressable 
+        style={[styles.signInButton, loading && styles.disabledButton]} 
+        onPress={handleSignIn}
+        disabled={loading}
+      >
+        <Text style={styles.signInText}>
+          {loading ? 'Signing in...' : 'Sign In'}
+        </Text>
       </Pressable>
     </View>
   );
@@ -117,5 +205,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1A1A1A',
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
   },
 }); 

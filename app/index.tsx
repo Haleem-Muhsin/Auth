@@ -16,7 +16,11 @@ export default function Index() {
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container1}>
         <SwitchTabs onTabChange={handleTabChange} />
-        {activeTab === 'signin' ? <LoginForm /> : <SignupForm />}
+        {activeTab === 'signin' ? (
+          <LoginForm />
+        ) : (
+          <SignupForm setActiveTab={setActiveTab} />
+        )}
       </View>
       <View style={styles.container2}>
       </View>

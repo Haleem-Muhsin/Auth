@@ -1,9 +1,41 @@
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
 import Checkbox from 'expo-checkbox';
 import { useState } from 'react';
+import { useRouter } from "expo-router";
+import { auth } from '../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { useUser } from '../context/UserContext';
 
-export default function SignupForm() {
+type SignupFormProps = {
+  setActiveTab: (tab: 'signin' | 'signup') => void;
+};
+
+export default function SignupForm({ setActiveTab }: SignupFormProps) {
+  const { setUserName } = useUser();
   const [isChecked, setIsChecked] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSignUp = async () => {
+    if (!email || !password || !name || !isChecked) {
+      Alert.alert('Error', 'Please fill in all fields and accept terms');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await createUserWithEmailAndPassword(auth, email, password);
+      setUserName(name);
+      setActiveTab('signin');
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -16,6 +48,8 @@ export default function SignupForm() {
           style={styles.input}
           placeholder="John Doe"
           autoCapitalize="words"
+          value={name}
+          onChangeText={setName}
         />
       </View>
 
@@ -26,6 +60,8 @@ export default function SignupForm() {
           placeholder="placeholder@gmail.com"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
         />
       </View>
 
@@ -35,6 +71,8 @@ export default function SignupForm() {
           style={styles.input}
           secureTextEntry
           placeholder="••••••••"
+          value={password}
+          onChangeText={setPassword}
         />
       </View>
 
@@ -50,8 +88,14 @@ export default function SignupForm() {
         </View>
       </View>
 
-      <Pressable style={styles.signInButton}>
-        <Text style={styles.signInText}>Create Account</Text>
+      <Pressable 
+        style={[styles.signInButton, loading && styles.disabledButton]}
+        onPress={handleSignUp}
+        disabled={loading}
+      >
+        <Text style={styles.signInText}>
+          {loading ? 'Creating Account...' : 'Create Account'}
+        </Text>
       </Pressable>
     </View>
   );
@@ -120,5 +164,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1A1A1A',
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
   },
 }); 
