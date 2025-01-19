@@ -1,5 +1,4 @@
 import { View, StyleSheet, SafeAreaView, Pressable, Alert, Dimensions, Animated, Text, ScrollView } from 'react-native';
-import LocationInputs from './components/LocationInputs';
 import AmbulanceList from './components/AmbulanceList';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -372,10 +371,6 @@ export default function Home() {
             </Marker>
           ))}
         </MapView>
-        
-        <Pressable onPress={handleLogout} style={styles.iconContainer}>
-          <Ionicons name="person-circle-outline" size={30} color="#294B29" />
-        </Pressable>
       </View>
 
       <Animated.View 
