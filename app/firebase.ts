@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
     apiKey: "AIzaSyCe68KP9wm8I1O1Q_nFfbNA7SuKoO5m7HY",
@@ -8,13 +9,15 @@ const firebaseConfig = {
     storageBucket: "medimove-6b1fd.firebasestorage.app",
     messagingSenderId: "1085871722808",
     appId: "1:1085871722808:web:157d8f4e25960632f331cd",
-    measurementId: "G-12G6FXY3H2"
+    measurementId: "G-12G6FXY3H2",
+    databaseURL: "https://medimove-6b1fd-default-rtdb.firebaseio.com"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const database = getDatabase(app);
 
-export { auth };
+export { auth, database };
 export default app;
 
 
