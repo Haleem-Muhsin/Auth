@@ -9,7 +9,7 @@ interface AmbulanceListProps {
   onSelect: (ambulance: Ambulance) => void;
 }
 
-const fakeAmbulances: Ambulance[] = [
+export const fakeAmbulances: Ambulance[] = [
   {
     id: 'KL-05-AB-1234',
     latitude: 9.5916,

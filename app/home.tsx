@@ -11,6 +11,7 @@ import { useEffect, useState, useRef } from 'react';
 import { ref, onValue } from 'firebase/database';
 import { Ambulance } from './types/ambulance';
 import * as Location from 'expo-location';
+import { fakeAmbulances } from './components/AmbulanceList';
 
 interface Coordinates {
   latitude: number;
@@ -152,77 +153,12 @@ export default function Home() {
           id: key,
           ...data[key]
         }));
-        console.log('Fetched ambulances:', ambulanceList);
         setAmbulances(ambulanceList);
+      } else {
+        setAmbulances(fakeAmbulances);
       }
     });
     return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    // Sample ambulance data
-    const sampleAmbulances: Ambulance[] = [
-      {
-        id: 'AMB001',
-        latitude: 9.5916,
-        longitude: 76.5222,
-        status: 'available',
-        driver: 'Rajesh Kumar',
-        lastUpdated: Date.now()
-      },
-      {
-        id: 'AMB002',
-        latitude: 9.5968,
-        longitude: 76.5359,
-        status: 'available',
-        driver: 'Arun Thomas',
-        lastUpdated: Date.now()
-      },
-      {
-        id: 'AMB003',
-        latitude: 9.7160,
-        longitude: 76.6860,
-        status: 'busy',
-        driver: 'Joseph Mathew',
-        lastUpdated: Date.now()
-      },
-      {
-        id: 'AMB004',
-        latitude: 9.7109,
-        longitude: 76.6780,
-        status: 'available',
-        driver: 'Mary Philip',
-        lastUpdated: Date.now()
-      },
-      {
-        id: 'AMB005',
-        latitude: 9.7180,
-        longitude: 76.6920,
-        status: 'offline',
-        driver: 'George Jacob',
-        lastUpdated: Date.now()
-      },
-      // Adding two new ambulances in Kanjirappally
-      {
-        id: 'AMB006',
-        latitude: 9.5156,
-        longitude: 76.7890,
-        status: 'available',
-        driver: 'Thomas Varghese',
-        lastUpdated: Date.now()
-      },
-      {
-        id: 'AMB007',
-        latitude: 9.5198,
-        longitude: 76.7925,
-        status: 'available',
-        driver: 'Anna Kurian',
-        lastUpdated: Date.now()
-      }
-    ];
-
-    // Set the sample data directly instead of waiting for Firebase
-    setAmbulances(sampleAmbulances);
   }, []);
 
   const handleLocationChange = async (from: string, to: string) => {
