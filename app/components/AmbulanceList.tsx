@@ -3,14 +3,30 @@ import { Ionicons } from '@expo/vector-icons';
 import type { Ambulance } from '../types/ambulance';
 import AmbulanceDetails from './AmbulanceDetails';
 import { useState } from 'react';
+import * as Location from 'expo-location';
 
 interface AmbulanceListProps {
   ambulances: Ambulance[];
   onSelect: (ambulance: Ambulance) => void;
+  userLocation?: { latitude: number; longitude: number } | null;
 }
 
-export default function AmbulanceList({ ambulances, onSelect }: AmbulanceListProps) {
+export default function AmbulanceList({ ambulances, onSelect, userLocation }: AmbulanceListProps) {
   const [selectedAmbulance, setSelectedAmbulance] = useState<Ambulance | null>(null);
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 10) / 10; // Round to 1 decimal place
+  };
+
+  const toRad = (value: number) => (value * Math.PI) / 180;
 
   const handleAmbulancePress = (ambulance: Ambulance) => {
     setSelectedAmbulance(ambulance);
@@ -18,35 +34,51 @@ export default function AmbulanceList({ ambulances, onSelect }: AmbulanceListPro
 
   return (
     <ScrollView style={styles.container}>
-      {ambulances.map((ambulance) => (
-        <Pressable
-          key={ambulance.id}
-          style={styles.option}
-          onPress={() => {
-            handleAmbulancePress(ambulance);
-            onSelect(ambulance);
-          }}
-        >
-          <View style={styles.header}>
-            <Ionicons name="medical" size={24} color="#294B29" />
-            <Text style={styles.type}>
-              {ambulance.type} Ambulance - {ambulance.id}
-            </Text>
-          </View>
-          <View style={styles.details}>
-            <Text style={styles.driverInfo}>
-              Driver: {ambulance.driver}
-            </Text>
-            <Text style={styles.hospitalInfo}>
-              Base: {ambulance.hospital}
-            </Text>
-          </View>
-          <View style={styles.status}>
-            <View style={[styles.statusDot, { backgroundColor: '#4CAF50' }]} />
-            <Text style={styles.statusText}>Available Now</Text>
-          </View>
-        </Pressable>
-      ))}
+      {ambulances.map((ambulance) => {
+        const distance = userLocation
+          ? calculateDistance(
+              userLocation.latitude,
+              userLocation.longitude,
+              ambulance.latitude,
+              ambulance.longitude
+            )
+          : null;
+
+        return (
+          <Pressable
+            key={ambulance.id}
+            style={styles.option}
+            onPress={() => {
+              handleAmbulancePress(ambulance);
+              onSelect(ambulance);
+            }}
+          >
+            <View style={styles.header}>
+              <Ionicons name="medical" size={24} color="#294B29" />
+              <Text style={styles.type}>
+                {ambulance.type} Ambulance - {ambulance.id}
+              </Text>
+            </View>
+            <View style={styles.details}>
+              <Text style={styles.driverInfo}>
+                Driver: {ambulance.driver}
+              </Text>
+              <Text style={styles.hospitalInfo}>
+                Base: {ambulance.hospital}
+              </Text>
+              {distance !== null && (
+                <Text style={styles.distanceInfo}>
+                  Distance: {distance} km
+                </Text>
+              )}
+            </View>
+            <View style={styles.status}>
+              <View style={[styles.statusDot, { backgroundColor: '#4CAF50' }]} />
+              <Text style={styles.statusText}>Available Now</Text>
+            </View>
+          </Pressable>
+        );
+      })}
       {selectedAmbulance && (
         <AmbulanceDetails
           ambulance={selectedAmbulance}
@@ -115,5 +147,10 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     color: '#4CAF50',
+  },
+  distanceInfo: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   }
 }); 

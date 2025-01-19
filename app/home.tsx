@@ -401,9 +401,10 @@ export default function Home() {
 
           {isExpanded && nearbyAmbulances.length > 0 && (
             <AmbulanceList 
-              ambulances={nearbyAmbulances}
-              onSelect={handleAmbulanceSelect}
-            />
+            ambulances={nearbyAmbulances} 
+            onSelect={handleAmbulanceSelect} 
+            userLocation={fromCoords}
+          />
           )}
         </View>
       </Animated.View>
