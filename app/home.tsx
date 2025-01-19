@@ -3,12 +3,12 @@ import LocationInputs from './components/LocationInputs';
 import AmbulanceList from './components/AmbulanceList';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { auth, database } from './firebase';
+import { auth, firestore } from './firebase';
 import { signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { useEffect, useState, useRef } from 'react';
-import { ref, onValue } from 'firebase/database';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { Ambulance } from './types/ambulance';
 import * as Location from 'expo-location';
 import { fakeAmbulances } from './components/AmbulanceList';
@@ -145,18 +145,13 @@ export default function Home() {
   const [nearbyAmbulances, setNearbyAmbulances] = useState<Ambulance[]>([]);
 
   useEffect(() => {
-    const ambulancesRef = ref(database, 'ambulances');
-    const unsubscribe = onValue(ambulancesRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const ambulanceList: Ambulance[] = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        }));
-        setAmbulances(ambulanceList);
-      } else {
-        setAmbulances(fakeAmbulances);
-      }
+    const ambulancesRef = collection(firestore, 'ambulances');
+    const unsubscribe = onSnapshot(ambulancesRef, (snapshot) => {
+      const ambulanceList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Ambulance[];
+      setAmbulances(ambulanceList);
     });
     return () => unsubscribe();
   }, []);

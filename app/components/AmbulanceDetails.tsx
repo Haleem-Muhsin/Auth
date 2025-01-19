@@ -1,6 +1,9 @@
-import { View, Text, StyleSheet, Pressable, Linking, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Linking, Modal, TouchableWithoutFeedback, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Ambulance } from '../types/ambulance';
+import * as Location from 'expo-location';
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
 
 interface AmbulanceDetailsProps {
   ambulance: Ambulance;
@@ -9,6 +12,10 @@ interface AmbulanceDetailsProps {
 }
 
 export default function AmbulanceDetails({ ambulance, isVisible, onClose }: AmbulanceDetailsProps) {
+  const router = useRouter();
+  const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
+  const [distance, setDistance] = useState<number | null>(null);
+
   const handleCall = () => {
     Linking.openURL(`tel:${ambulance.phoneNumber}`);
   };
@@ -24,6 +31,49 @@ export default function AmbulanceDetails({ ambulance, isVisible, onClose }: Ambu
       default:
         return '₹15/km';
     }
+  };
+
+  const handleBookNow = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'Location permission is required');
+        return;
+      }
+
+      Alert.alert(
+        'Confirm Booking',
+        `Book ${ambulance.type} ambulance from ${ambulance.hospital}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Confirm', 
+            onPress: () => {
+              Alert.alert('Booking Confirmed', 'The ambulance is on its way');
+              onClose();
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Could not process booking');
+    }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const toRad = (value: number) => {
+    return (value * Math.PI) / 180;
   };
 
   return (
@@ -83,7 +133,7 @@ export default function AmbulanceDetails({ ambulance, isVisible, onClose }: Ambu
                 </View>
               </View>
 
-              <Pressable style={styles.bookButton}>
+              <Pressable style={styles.bookButton} onPress={handleBookNow}>
                 <Text style={styles.bookButtonText}>Book Now</Text>
               </Pressable>
             </View>
