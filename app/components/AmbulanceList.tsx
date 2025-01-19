@@ -9,54 +9,7 @@ interface AmbulanceListProps {
   onSelect: (ambulance: Ambulance) => void;
 }
 
-export const fakeAmbulances: Ambulance[] = [
-  {
-    id: 'KL-05-AB-1234',
-    latitude: 9.5916,
-    longitude: 76.5222,
-    status: 'available',
-    driver: 'Rajesh Kumar',
-    phoneNumber: '+91 9876543210',
-    lastUpdated: Date.now(),
-    type: 'Basic',
-    hospital: "St. Mary's Hospital"
-  },
-  {
-    id: 'KL-05-CD-5678',
-    latitude: 9.5968,
-    longitude: 76.5359,
-    status: 'available',
-    driver: 'Arun Thomas',
-    phoneNumber: '+91 9876543211',
-    lastUpdated: Date.now(),
-    type: 'Advanced',
-    hospital: 'Medical College Kottayam'
-  },
-  {
-    id: 'KL-05-EF-9012',
-    latitude: 9.7160,
-    longitude: 76.6860,
-    status: 'available',
-    driver: 'Joseph Mathew',
-    phoneNumber: '+91 9876543212',
-    lastUpdated: Date.now(),
-    type: 'ICU',
-    hospital: 'District Hospital Pala'
-  },
-  {
-    id: 'KL-05-GH-3456',
-    latitude: 9.7109,
-    longitude: 76.6780,
-    status: 'available',
-    driver: 'Mary Philip',
-    phoneNumber: '+91 9876543213',
-    lastUpdated: Date.now(),
-    type: 'Basic',
-    hospital: 'Caritas Hospital'
-  }
-];
-
-export default function AmbulanceList({ ambulances = fakeAmbulances, onSelect }: AmbulanceListProps) {
+export default function AmbulanceList({ ambulances, onSelect }: AmbulanceListProps) {
   const [selectedAmbulance, setSelectedAmbulance] = useState<Ambulance | null>(null);
 
   const handleAmbulancePress = (ambulance: Ambulance) => {

@@ -11,7 +11,6 @@ import { useEffect, useState, useRef } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { Ambulance } from './types/ambulance';
 import * as Location from 'expo-location';
-import { fakeAmbulances } from './components/AmbulanceList';
 
 interface Coordinates {
   latitude: number;

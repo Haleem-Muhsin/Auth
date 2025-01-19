@@ -1,20 +1,16 @@
-import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { firestore } from '../firebase';
-import { fakeAmbulances } from '../components/AmbulanceList';
 
-export const initializeAmbulanceDB = async () => {
+export const getAmbulances = async () => {
   try {
     const ambulancesRef = collection(firestore, 'ambulances');
     const snapshot = await getDocs(ambulancesRef);
-    
-    if (snapshot.empty) {
-      // Populate with fake ambulances if collection is empty
-      for (const ambulance of fakeAmbulances) {
-        await setDoc(doc(ambulancesRef, ambulance.id), ambulance);
-      }
-      console.log('Ambulances initialized in Firestore');
-    }
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
   } catch (error) {
-    console.error('Error initializing ambulances:', error);
+    console.error('Error fetching ambulances:', error);
+    return [];
   }
 }; 
