@@ -4,6 +4,7 @@ import { useState } from "react";
 import SwitchTabs from "./components/SwitchTabs";
 import LoginForm from "./components/LoginForm";
 import SignupForm from "./components/SignupForm";
+import DriverSetUp from "./components/DriverSetUp";
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
@@ -23,6 +24,7 @@ export default function Index() {
         )}
       </View>
       <View style={styles.container2}>
+        <DriverSetUp />
       </View>
     </SafeAreaView>
   );

@@ -86,7 +86,7 @@ export default function LoginForm() {
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome back!</Text>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Customer Login</Text>
       
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Your Email</Text>

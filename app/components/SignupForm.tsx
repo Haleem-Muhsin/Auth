@@ -40,7 +40,7 @@ export default function SignupForm({ setActiveTab }: SignupFormProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Create account</Text>
-      <Text style={styles.title}>Sign Up</Text>
+      <Text style={styles.title}>Customer Sign Up</Text>
       
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Your Name</Text>
