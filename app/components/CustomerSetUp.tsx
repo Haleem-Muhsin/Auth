@@ -2,13 +2,13 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 
-export default function DriverSetUp() {
+export default function CustomerSetUp() {
   const router = useRouter();
 
   return (
     <View style={styles.driverContainer}>
-      <Pressable onPress={() => router.push('/index2')}>
-        <Text style={styles.driverText}>Driver? login/sign up here</Text>
+      <Pressable onPress={() => router.push('/')}>
+        <Text style={styles.driverText}>Customer? login/sign up here</Text>
       </Pressable>
     </View>
   );
