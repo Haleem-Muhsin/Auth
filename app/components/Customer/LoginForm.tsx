@@ -2,11 +2,11 @@ import { View, Text, TextInput, Pressable, StyleSheet, Alert, BackHandler } from
 import Checkbox from 'expo-checkbox';
 import { useState, useEffect } from 'react';
 import { useRouter } from "expo-router";
-import { auth } from '../firebase';
+import { auth } from '../../firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function DriverLoginForm() {
+export default function LoginForm() {
   const [isChecked, setIsChecked] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -86,7 +86,7 @@ export default function DriverLoginForm() {
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome back!</Text>
-      <Text style={styles.title}>Driver Login</Text>
+      <Text style={styles.title}>Customer Login</Text>
       
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Your Email</Text>

@@ -1,71 +1,35 @@
-import { View, Text, TextInput, Pressable, StyleSheet, Alert, BackHandler } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
 import Checkbox from 'expo-checkbox';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from "expo-router";
-import { auth } from '../firebase';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth } from '../../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { useUser } from '../../context/UserContext';
 
-export default function LoginForm() {
+type SignupFormProps = {
+  setActiveTab: (tab: 'signin' | 'signup') => void;
+};
+
+export default function SignupForm({ setActiveTab }: SignupFormProps) {
+  const { setUserName } = useUser();
   const [isChecked, setIsChecked] = useState(false);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      Alert.alert(
-        'Sign Out',
-        'Are you sure you want to sign out?',
-        [
-          {
-            text: 'Cancel',
-            onPress: () => null,
-            style: 'cancel',
-          },
-          {
-            text: 'Sign Out',
-            onPress: handleSignOut,
-            style: 'destructive',
-          },
-        ],
-        { cancelable: true }
-      );
-      return true;
-    });
-
-    return () => backHandler.remove();
-  }, [router]);
-
-  useEffect(() => {
-    checkPersistedAuth();
-  }, []);
-
-  const checkPersistedAuth = async () => {
-    try {
-      const persistedAuth = await AsyncStorage.getItem('rememberMe');
-      if (persistedAuth === 'true' && auth.currentUser) {
-        router.push('/home');
-      }
-    } catch (error) {
-      console.error('Error checking auth state:', error);
-    }
-  };
-
-  const handleSignIn = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+  const handleSignUp = async () => {
+    if (!email || !password || !name || !isChecked) {
+      Alert.alert('Error', 'Please fill in all fields and accept terms');
       return;
     }
 
     try {
       setLoading(true);
-      await signInWithEmailAndPassword(auth, email, password);
-      if (isChecked) {
-        await AsyncStorage.setItem('rememberMe', 'true');
-      }
-      router.push('/home');
+      await createUserWithEmailAndPassword(auth, email, password);
+      setUserName(name);
+      setActiveTab('signin');
     } catch (error: any) {
       Alert.alert('Error', error.message);
     } finally {
@@ -73,21 +37,22 @@ export default function LoginForm() {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      await AsyncStorage.removeItem('rememberMe');
-      router.replace('/');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={styles.welcomeText}>Welcome back!</Text>
-      <Text style={styles.title}>Customer Login</Text>
+      <Text style={styles.welcomeText}>Create account</Text>
+      <Text style={styles.title}>Customer Sign Up</Text>
       
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Your Name</Text>
+        <TextInput 
+          style={styles.input}
+          placeholder="John Doe"
+          autoCapitalize="words"
+          value={name}
+          onChangeText={setName}
+        />
+      </View>
+
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Your Email</Text>
         <TextInput 
@@ -101,7 +66,7 @@ export default function LoginForm() {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Your Password</Text>
+        <Text style={styles.label}>Create Password</Text>
         <TextInput 
           style={styles.input}
           secureTextEntry
@@ -119,20 +84,17 @@ export default function LoginForm() {
             onValueChange={setIsChecked}
             color={isChecked ? '#007AFF' : undefined}
           />
-          <Text style={styles.rememberText}>Remember me</Text>
+          <Text style={styles.rememberText}>I agree to the Terms & Conditions</Text>
         </View>
-        <Pressable>
-          <Text style={styles.forgotPassword}>Forgot password?</Text>
-        </Pressable>
       </View>
 
       <Pressable 
-        style={[styles.signInButton, loading && styles.disabledButton]} 
-        onPress={handleSignIn}
+        style={[styles.signInButton, loading && styles.disabledButton]}
+        onPress={handleSignUp}
         disabled={loading}
       >
         <Text style={styles.signInText}>
-          {loading ? 'Signing in...' : 'Sign In'}
+          {loading ? 'Creating Account...' : 'Create Account'}
         </Text>
       </Pressable>
     </View>
@@ -147,13 +109,13 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 16,
     color: '#1A1A1A',
-    marginVertical: 5,
+    marginBottom: 8,
   },
   title: {
-    fontSize: 36,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#1A1A1A',
-    marginVertical: 20,
+    marginBottom: 24,
   },
   inputContainer: {
     marginBottom: 16,
@@ -178,6 +140,7 @@ const styles = StyleSheet.create({
   rememberMe: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   checkbox: {
     margin: 0,
@@ -189,17 +152,13 @@ const styles = StyleSheet.create({
   rememberText: {
     fontSize: 14,
     color: '#1A1A1A',
-  },
-  forgotPassword: {
-    fontSize: 14,
-    color: '#007AFF',
+    flex: 1,
   },
   signInButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 16,
     alignItems: 'center',
-    marginTop: 40,
   },
   signInText: {
     fontSize: 16,

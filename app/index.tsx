@@ -2,9 +2,9 @@ import { SafeAreaView, View } from "react-native";
 import { StyleSheet } from "react-native";
 import { useState } from "react";
 import SwitchTabs from "./components/SwitchTabs";
-import LoginForm from "./components/LoginForm";
-import SignupForm from "./components/SignupForm";
-import DriverSetUp from "./components/DriverSetUp";
+import LoginForm from "./components/Customer/LoginForm";
+import SignupForm from "./components/Customer/SignupForm";
+import DriverSetUp from "./components/Driver/DriverSetUp";
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');

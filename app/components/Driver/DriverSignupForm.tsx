@@ -2,9 +2,9 @@ import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-nativ
 import Checkbox from 'expo-checkbox';
 import { useState } from 'react';
 import { useRouter } from "expo-router";
-import { auth } from '../firebase';
+import { auth } from '../../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { useUser } from '../context/UserContext';
+import { useUser } from '../../context/UserContext';
 
 type SignupFormProps = {
   setActiveTab: (tab: 'signin' | 'signup') => void;
