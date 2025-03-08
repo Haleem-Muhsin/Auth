@@ -1,13 +1,13 @@
 interface Ambulance {
-  id: string;
+  id: string;  // This will be the number plate
+  driver: string;
+  hospital: string;
+  phoneNumber: string;
+  status: 'available' | 'busy' | 'offline';
+  type: 'Basic' | 'Advanced' | 'ICU';
   latitude: number;
   longitude: number;
-  status: 'available' | 'busy' | 'offline';
-  driver: string;
-  phoneNumber?: string;
   lastUpdated: number;
-  type?: 'Basic' | 'Advanced' | 'ICU';
-  hospital?: string;
 }
 
 export default Ambulance;

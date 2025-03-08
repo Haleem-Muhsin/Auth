@@ -46,7 +46,7 @@ export default function DriverLoginForm() {
     try {
       const persistedAuth = await AsyncStorage.getItem('rememberMe');
       if (persistedAuth === 'true' && auth.currentUser) {
-        router.push('/home');
+        router.push('/home2');
       }
     } catch (error) {
       console.error('Error checking auth state:', error);
@@ -65,7 +65,7 @@ export default function DriverLoginForm() {
       if (isChecked) {
         await AsyncStorage.setItem('rememberMe', 'true');
       }
-      router.push('/home');
+      router.push('/home2');
     } catch (error: any) {
       Alert.alert('Error', error.message);
     } finally {

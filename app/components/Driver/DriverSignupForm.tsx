@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, Alert, ScrollView } from "react-native";
 import Checkbox from 'expo-checkbox';
 import { useState } from 'react';
 import { useRouter } from "expo-router";
@@ -38,7 +38,7 @@ export default function DriverSignupForm({ setActiveTab }: SignupFormProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.welcomeText}>Create account</Text>
       <Text style={styles.title}>Driver Sign Up</Text>
       
@@ -97,7 +97,7 @@ export default function DriverSignupForm({ setActiveTab }: SignupFormProps) {
           {loading ? 'Creating Account...' : 'Create Account'}
         </Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
