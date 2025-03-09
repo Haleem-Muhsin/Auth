@@ -465,6 +465,14 @@ export default function Home2() {
           </View>
         </View>
       </Modal>
+
+      <Pressable 
+        style={styles.bookingsButton} 
+        onPress={() => router.push('/bookings')}
+      >
+        <Ionicons name="list" size={24} color="white" />
+        <Text style={styles.buttonText}>Bookings</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -614,5 +622,16 @@ const styles = StyleSheet.create({
   },
   selectedTypeText: {
     color: 'white',
+  },
+  bookingsButton: {
+    position: 'absolute',
+    bottom: 50,
+    right: 20,
+    backgroundColor: '#294B29',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 25,
+    gap: 8
   },
 });
