@@ -1,13 +1,15 @@
 import { View, StyleSheet, SafeAreaView, Pressable, Alert, Text, Modal, TextInput, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { auth, firestore } from './firebase';
+import { auth, firestore, database } from './firebase';
 import { signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import type { Ambulance } from './types/ambulance';
 import React from 'react';
+import * as Location from 'expo-location';
+import { ref, set } from 'firebase/database';
 
 export default function Home2() {
   const router = useRouter();
@@ -21,6 +23,44 @@ export default function Home2() {
 
   useEffect(() => {
     fetchAmbulanceDetails();
+  }, []);
+
+  useEffect(() => {
+    let locationSubscription: Location.LocationSubscription;
+
+    const startLocationTracking = async () => {
+      if (!auth.currentUser?.email) return;
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'Location permission is required');
+        return;
+      }
+
+      locationSubscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 5000,
+          distanceInterval: 10
+        },
+        (location) => {
+          const driverRef = ref(database, `drivers/${auth.currentUser!.email!.replace('.', ',')}`);
+          set(driverRef, {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            lastUpdated: Date.now(),
+            status: ambulanceDetails?.status || 'offline'
+          });
+        }
+      );
+    };
+
+    startLocationTracking();
+    return () => {
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
+    };
   }, []);
 
   const fetchAmbulanceDetails = async () => {
