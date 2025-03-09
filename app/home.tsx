@@ -2,7 +2,7 @@ import { View, StyleSheet, SafeAreaView, Pressable, Alert, Dimensions, Animated,
 import AmbulanceList from './components/AmbulanceList';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { auth, firestore } from './firebase';
+import { auth, firestore, database } from './firebase';
 import { signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, Polyline } from 'react-native-maps';
@@ -10,6 +10,7 @@ import { useEffect, useState, useRef } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { Ambulance } from './types/ambulance';
 import * as Location from 'expo-location';
+import { ref, onValue } from 'firebase/database';
 
 interface Coordinates {
   latitude: number;
@@ -141,16 +142,31 @@ export default function Home() {
   const slideAnim = useRef(new Animated.Value(0)).current;
   const mapRef = useRef<MapView>(null);
   const [nearbyAmbulances, setNearbyAmbulances] = useState<Ambulance[]>([]);
+  const [driverLocations, setDriverLocations] = useState<{[key: string]: {latitude: number; longitude: number}}>({});
 
   useEffect(() => {
     const ambulancesRef = collection(firestore, 'ambulances');
     const unsubscribe = onSnapshot(ambulancesRef, (snapshot) => {
-      const ambulanceList = snapshot.docs.map(doc => ({
+      const ambulanceData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Ambulance[];
-      setAmbulances(ambulanceList);
+      
+      setAmbulances(ambulanceData);
     });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const driversRef = ref(database, 'drivers');
+    const unsubscribe = onValue(driversRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setDriverLocations(data);
+      }
+    });
+
     return () => unsubscribe();
   }, []);
 
@@ -353,23 +369,28 @@ export default function Home() {
               strokeWidth={3}
             />
           )}
-          {ambulances.map((ambulance) => (
-            <Marker
-              key={ambulance.id}
-              coordinate={{
-                latitude: ambulance.latitude,
-                longitude: ambulance.longitude
-              }}
-              title={`Ambulance ${ambulance.id}`}
-              description={`Status: ${ambulance.status}`}
-            >
-              <Ionicons 
-                name="medical" 
-                size={30} 
-                color={getMarkerColor(ambulance.status)} 
-              />
-            </Marker>
-          ))}
+          {ambulances.map((ambulance) => {
+            const driverEmail = ambulance.id.replace(',', '.');
+            const driverLocation = driverLocations[driverEmail];
+            
+            return (
+              <Marker
+                key={ambulance.id}
+                coordinate={{
+                  latitude: driverLocation?.latitude || ambulance.latitude,
+                  longitude: driverLocation?.longitude || ambulance.longitude
+                }}
+                title={`Ambulance ${ambulance.id}`}
+                description={`Status: ${ambulance.status}`}
+              >
+                <Ionicons 
+                  name="medical" 
+                  size={30} 
+                  color={getMarkerColor(ambulance.status)} 
+                />
+              </Marker>
+            );
+          })}
         </MapView>
       </View>
 

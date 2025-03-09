@@ -4,6 +4,9 @@ import { Ambulance } from '../types/ambulance';
 import * as Location from 'expo-location';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { ref, set } from 'firebase/database';
+import { database, auth, firestore } from '../firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface AmbulanceDetailsProps {
   ambulance: Ambulance;
@@ -35,11 +38,41 @@ export default function AmbulanceDetails({ ambulance, isVisible, onClose }: Ambu
 
   const handleBookNow = async () => {
     try {
+      if (!auth.currentUser?.email) {
+        Alert.alert('Error', 'Please login first');
+        return;
+      }
+
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permission denied', 'Location permission is required');
         return;
       }
+
+      const location = await Location.getCurrentPositionAsync({});
+      
+      // Store customer location in realtime database
+      const customerRef = ref(database, `customers/${auth.currentUser.email.replace('.', ',')}`);
+      await set(customerRef, {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        lastUpdated: Date.now(),
+        requestedAmbulanceId: ambulance.id,
+        status: 'waiting'
+      });
+
+      // Create booking in Firestore
+      const bookingRef = doc(firestore, 'bookings', `${auth.currentUser.email}_${Date.now()}`);
+      await setDoc(bookingRef, {
+        customerId: auth.currentUser.email,
+        ambulanceId: ambulance.id,
+        status: 'pending',
+        timestamp: Date.now(),
+        customerLocation: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        }
+      });
 
       Alert.alert(
         'Confirm Booking',
@@ -49,13 +82,21 @@ export default function AmbulanceDetails({ ambulance, isVisible, onClose }: Ambu
           { 
             text: 'Confirm', 
             onPress: () => {
-              Alert.alert('Booking Confirmed', 'The ambulance is on its way');
+              router.push({
+                pathname: "/tracking",
+                params: { 
+                  ambulanceId: ambulance.id,
+                  userLat: location.coords.latitude,
+                  userLng: location.coords.longitude
+                }
+              });
               onClose();
             }
           }
         ]
       );
     } catch (error) {
+      console.error('Booking error:', error);
       Alert.alert('Error', 'Could not process booking');
     }
   };

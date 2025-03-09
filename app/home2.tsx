@@ -5,11 +5,12 @@ import { auth, firestore, database } from './firebase';
 import { signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
 import type { Ambulance } from './types/ambulance';
 import React from 'react';
 import * as Location from 'expo-location';
 import { ref, set } from 'firebase/database';
+import type { Booking } from './types/booking';
 
 export default function Home2() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function Home2() {
   const [isEditing, setIsEditing] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [editableDetails, setEditableDetails] = useState<Partial<Ambulance>>({});
+  const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
 
   const ambulanceTypes = ['Basic', 'Advanced', 'ICU'] as const;
   const statusTypes = ['available', 'busy', 'offline'] as const;
@@ -61,6 +63,38 @@ export default function Home2() {
         locationSubscription.remove();
       }
     };
+  }, []);
+
+  useEffect(() => {
+    if (!auth.currentUser?.email) return;
+
+    const bookingsRef = collection(firestore, 'bookings');
+    const q = query(
+      bookingsRef, 
+      where('ambulanceId', '==', auth.currentUser.email),
+      where('status', '==', 'pending')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'added') {
+          const booking = change.doc.data() as Booking;
+          Alert.alert(
+            'New Booking Request',
+            'A customer needs an ambulance. Accept the request?',
+            [
+              { text: 'Reject', style: 'cancel' },
+              { 
+                text: 'Accept',
+                onPress: () => handleAcceptBooking(change.doc.id, booking)
+              }
+            ]
+          );
+        }
+      });
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const fetchAmbulanceDetails = async () => {
@@ -195,6 +229,27 @@ export default function Home2() {
     } catch (error) {
       console.error('Error saving details:', error);
       Alert.alert('Error', `Failed to save details: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleAcceptBooking = async (bookingId: string, booking: Booking) => {
+    try {
+      await updateDoc(doc(firestore, 'bookings', bookingId), {
+        status: 'accepted'
+      });
+
+      setCurrentBooking(booking);
+      router.push({
+        pathname: "/tracking",
+        params: { 
+          bookingId,
+          customerEmail: booking.customerId,
+          userLat: booking.customerLocation.latitude,
+          userLng: booking.customerLocation.longitude
+        }
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Could not accept booking');
     }
   };
 
