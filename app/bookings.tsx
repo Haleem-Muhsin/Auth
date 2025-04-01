@@ -53,6 +53,18 @@ export default function Bookings() {
     }
   };
 
+  const handleCompleteBooking = async (booking: Booking & { id: string }) => {
+    try {
+      await updateDoc(doc(firestore, 'bookings', booking.id), {
+        status: 'completed',
+        completedAt: new Date().toISOString()
+      });
+      Alert.alert('Success', 'Booking marked as completed');
+    } catch (error) {
+      Alert.alert('Error', 'Could not complete booking');
+    }
+  };
+
   const handleTrackBooking = (booking: Booking & { id: string }) => {
     router.push({
       pathname: "/tracking",
@@ -60,7 +72,8 @@ export default function Bookings() {
         bookingId: booking.id,
         customerEmail: booking.customerId,
         userLat: booking.pickupLocation.latitude,
-        userLng: booking.pickupLocation.longitude
+        userLng: booking.pickupLocation.longitude,
+        ambulanceId: auth.currentUser?.email
       }
     });
   };
@@ -108,14 +121,22 @@ export default function Bookings() {
                       <Text style={styles.actionButtonText}>Accept</Text>
                     </Pressable>
                   </>
-                ) : (
-                  <Pressable 
-                    style={[styles.actionButton, styles.trackButton]}
-                    onPress={() => handleTrackBooking(booking)}
-                  >
-                    <Text style={styles.actionButtonText}>Track</Text>
-                  </Pressable>
-                )}
+                ) : booking.status === 'accepted' ? (
+                  <View style={styles.acceptedButtons}>
+                    <Pressable 
+                      style={[styles.actionButton, styles.trackButton]}
+                      onPress={() => handleTrackBooking(booking)}
+                    >
+                      <Text style={styles.actionButtonText}>Track</Text>
+                    </Pressable>
+                    <Pressable 
+                      style={[styles.actionButton, styles.completeButton]}
+                      onPress={() => handleCompleteBooking(booking)}
+                    >
+                      <Text style={styles.actionButtonText}>Complete</Text>
+                    </Pressable>
+                  </View>
+                ) : null}
               </View>
             </View>
           ))
@@ -199,25 +220,32 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: 10
   },
+  acceptedButtons: {
+    flexDirection: 'row',
+    gap: 10
+  },
   actionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 8,
-    minWidth: 80,
+    minWidth: 100,
     alignItems: 'center'
-  },
-  acceptButton: {
-    backgroundColor: '#4CAF50'
-  },
-  rejectButton: {
-    backgroundColor: '#f44336'
-  },
-  trackButton: {
-    backgroundColor: '#294B29'
   },
   actionButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600'
+  },
+  acceptButton: {
+    backgroundColor: '#4CAF50'
+  },
+  rejectButton: {
+    backgroundColor: '#F44336'
+  },
+  trackButton: {
+    backgroundColor: '#294B29'
+  },
+  completeButton: {
+    backgroundColor: '#FF9800'
   }
 }); 
