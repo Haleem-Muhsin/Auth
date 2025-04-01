@@ -655,14 +655,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedTypeButton: {
-    borderColor: 'transparent',
+    borderColor: 'white',
   },
   typeButtonText: {
     fontSize: 14,
     fontWeight: '600',
   },
   selectedTypeText: {
-    color: 'white',
+    color: 'blue',
   },
   bookingsButton: {
     position: 'absolute',
