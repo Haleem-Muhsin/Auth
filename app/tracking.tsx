@@ -1,7 +1,7 @@
-import { View, StyleSheet, Text, Dimensions } from 'react-native';
+import { View, StyleSheet, Text, Dimensions, Pressable } from 'react-native';
 import { useEffect, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { database } from './firebase';
 import { ref, onValue } from 'firebase/database';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ interface Location {
 }
 
 export default function Tracking() {
+  const router = useRouter();
   const { ambulanceId, userLat, userLng } = useLocalSearchParams();
   const [driverLocation, setDriverLocation] = useState<Location | null>(null);
 
@@ -54,7 +55,7 @@ export default function Tracking() {
             latitude: parseFloat(userLat as string),
             longitude: parseFloat(userLng as string),
           }}
-          title="Your Location"
+          title="Customer Location"
         >
           <View style={styles.markerContainer}>
             <Ionicons name="location" size={30} color="#294B29" />
@@ -73,6 +74,11 @@ export default function Tracking() {
           </Marker>
         )}
       </MapView>
+
+      {/* Back Button */}
+      <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Ionicons name="arrow-back" size={24} color="white" />
+      </Pressable>
     </View>
   );
 }
@@ -89,5 +95,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 5,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    backgroundColor: '#294B29',
+    padding: 10,
+    borderRadius: 25,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   }
 }); 
