@@ -19,9 +19,31 @@ export default function SignupForm({ setActiveTab }: SignupFormProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Password validation states
+  const [hasMinLength, setHasMinLength] = useState(false);
+  const [hasUpperCase, setHasUpperCase] = useState(false);
+  const [hasLowerCase, setHasLowerCase] = useState(false);
+  const [hasNumber, setHasNumber] = useState(false);
+  const [hasSpecialChar, setHasSpecialChar] = useState(false);
+
+  const validatePassword = (text: string) => {
+    setPassword(text);
+    setHasMinLength(text.length >= 8);
+    setHasUpperCase(/[A-Z]/.test(text));
+    setHasLowerCase(/[a-z]/.test(text));
+    setHasNumber(/[0-9]/.test(text));
+    setHasSpecialChar(/[!@#$%^&amp;*(),.?":{}|&lt;&gt;]/.test(text));
+  };
+
   const handleSignUp = async () => {
     if (!email || !password || !name || !isChecked) {
       Alert.alert('Error', 'Please fill in all fields and accept terms');
+      return;
+    }
+
+    // Check if all password requirements are met
+    if (!hasMinLength || !hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+      Alert.alert('Password Requirements', 'Please ensure your password meets all requirements');
       return;
     }
 
@@ -72,8 +94,25 @@ export default function SignupForm({ setActiveTab }: SignupFormProps) {
           secureTextEntry
           placeholder="••••••••"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={validatePassword}
         />
+        <View style={styles.passwordRequirements}>
+          <Text style={[styles.requirementText, hasMinLength && styles.requirementMet]}>
+            • At least 8 characters
+          </Text>
+          <Text style={[styles.requirementText, hasUpperCase && styles.requirementMet]}>
+            • One uppercase letter
+          </Text>
+          <Text style={[styles.requirementText, hasLowerCase && styles.requirementMet]}>
+            • One lowercase letter
+          </Text>
+          <Text style={[styles.requirementText, hasNumber && styles.requirementMet]}>
+            • One number
+          </Text>
+          <Text style={[styles.requirementText, hasSpecialChar && styles.requirementMet]}>
+            • One special character (!@#$%^&amp;*(),.?":{}|&lt;&gt;)
+          </Text>
+        </View>
       </View>
 
       <View style={styles.optionsRow}>
@@ -130,6 +169,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 13,
     fontSize: 16,
+  },
+  passwordRequirements: {
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+  },
+  requirementText: {
+    fontSize: 12,
+    color: '#666',
+    marginVertical: 2,
+  },
+  requirementMet: {
+    color: '#4CAF50',
   },
   optionsRow: {
     flexDirection: 'row',

@@ -41,10 +41,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#DBE7C9",
   },
   container2: {
-    flex: 1,
+    flex: 0.25,
     alignItems: "center",
     marginHorizontal: 25,
     borderRadius: 20,
     backgroundColor: "#DBE7C9",
+    maxHeight: 150,
   },
 });
