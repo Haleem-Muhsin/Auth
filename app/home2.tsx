@@ -576,21 +576,23 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
+    marginTop: Platform.OS === 'ios' ? 50 : 0, // Add space for notch on iOS
   },
   modalContent: {
+    flex: 1,
     backgroundColor: 'white',
     padding: 20,
-    borderRadius: 12,
-    width: '90%',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    width: '100%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    paddingTop: 10,
   },
   closeButton: {
     padding: 5,
@@ -672,5 +674,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 25,
     gap: 8
+  },
+  modalScrollView: {
+    flex: 1,
+  },
+  modalForm: {
+    paddingBottom: 20,
   },
 });
