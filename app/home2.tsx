@@ -27,7 +27,7 @@ export default function Home2() {
     insuranceEnd: false,
     pollutionEnd: false,
     currentDate: new Date(),
-    position: { x: 0, y: 0 }
+    currentField: '' as 'insuranceStartDate' | 'insuranceEndDate' | 'pollutionEndDate' | ''
   });
 
   const ambulanceTypes = ['Basic', 'Advanced', 'ICU'] as const;
@@ -355,6 +355,26 @@ export default function Home2() {
     return () => backHandler.remove();
   }, []);
 
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    const currentField = showDatePicker.currentField;
+    
+    if (Platform.OS === 'android') {
+      setShowDatePicker(prev => ({
+        ...prev,
+        insuranceStart: false,
+        insuranceEnd: false,
+        pollutionEnd: false
+      }));
+    }
+
+    if (event.type === 'set' && selectedDate && currentField) {
+      setEditableDetails(prev => ({
+        ...prev,
+        [currentField]: selectedDate.getTime()
+      }));
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -633,7 +653,8 @@ export default function Home2() {
                       setShowDatePicker({
                         ...showDatePicker,
                         insuranceStart: true,
-                        currentDate
+                        currentDate,
+                        currentField: 'insuranceStartDate'
                       });
                     }}
                     style={styles.calendarIconButton}
@@ -659,7 +680,8 @@ export default function Home2() {
                       setShowDatePicker({
                         ...showDatePicker,
                         insuranceEnd: true,
-                        currentDate
+                        currentDate,
+                        currentField: 'insuranceEndDate'
                       });
                     }}
                     style={styles.calendarIconButton}
@@ -685,7 +707,8 @@ export default function Home2() {
                       setShowDatePicker({
                         ...showDatePicker,
                         pollutionEnd: true,
-                        currentDate
+                        currentDate,
+                        currentField: 'pollutionEndDate'
                       });
                     }}
                     style={styles.calendarIconButton}
@@ -709,6 +732,49 @@ export default function Home2() {
                   <Text style={styles.buttonText}>Save</Text>
                 </Pressable>
               </View>
+
+              {/* Date Picker for Android */}
+              {Platform.OS === 'android' && (showDatePicker.insuranceStart || showDatePicker.insuranceEnd || showDatePicker.pollutionEnd) && (
+                <DateTimePicker
+                  value={showDatePicker.currentDate}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
+                  minimumDate={showDatePicker.currentField === 'insuranceStartDate' ? new Date() : undefined}
+                />
+              )}
+
+              {/* Date Picker for iOS */}
+              {Platform.OS === 'ios' && (showDatePicker.insuranceStart || showDatePicker.insuranceEnd || showDatePicker.pollutionEnd) && (
+                <View style={styles.datePickerWrapper}>
+                  <View style={styles.datePickerHeader}>
+                    <Text style={styles.datePickerTitle}>
+                      Select {showDatePicker.currentField.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                    </Text>
+                    <Pressable 
+                      style={styles.closePicker}
+                      onPress={() => {
+                        setShowDatePicker(prev => ({
+                          ...prev,
+                          insuranceStart: false,
+                          insuranceEnd: false,
+                          pollutionEnd: false
+                        }));
+                      }}
+                    >
+                      <Ionicons name="close" size={24} color="#294B29" />
+                    </Pressable>
+                  </View>
+                  <DateTimePicker
+                    value={showDatePicker.currentDate}
+                    mode="date"
+                    display="spinner"
+                    onChange={handleDateChange}
+                    minimumDate={showDatePicker.currentField === 'insuranceStartDate' ? new Date() : undefined}
+                    themeVariant="light"
+                  />
+                </View>
+              )}
             </ScrollView>
           </View>
         </View>
@@ -907,26 +973,35 @@ const styles = StyleSheet.create({
     padding: 5,
     marginLeft: 10,
   },
-  datePickerOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  datePickerContainer: {
-    backgroundColor: 'white',
+  datePickerWrapper: {
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    padding: 20,
-    width: '90%',
-    maxWidth: 400,
+    padding: 15,
+    marginTop: 20,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  datePickerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#294B29',
+    textTransform: 'capitalize',
+  },
+  closePicker: {
+    padding: 5,
   },
   editIconButton: {
     padding: 5,
