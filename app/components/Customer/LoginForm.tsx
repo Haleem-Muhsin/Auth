@@ -11,6 +11,8 @@ export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -54,8 +56,13 @@ export default function LoginForm() {
   };
 
   const handleSignIn = async () => {
+    // Reset errors
+    setEmailError('');
+    setPasswordError('');
+
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      if (!email) setEmailError('Email is required');
+      if (!password) setPasswordError('Password is required');
       return;
     }
 
@@ -67,7 +74,16 @@ export default function LoginForm() {
       }
       router.push('/home');
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      const errorMessage = error.message;
+      if (errorMessage.includes('user-not-found')) {
+        setEmailError('No account found with this email');
+      } else if (errorMessage.includes('wrong-password')) {
+        setPasswordError('Incorrect password');
+      } else if (errorMessage.includes('invalid-email')) {
+        setEmailError('Invalid email format');
+      } else {
+        setPasswordError('An error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -91,24 +107,32 @@ export default function LoginForm() {
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Your Email</Text>
         <TextInput 
-          style={styles.input}
+          style={[styles.input, emailError ? styles.inputError : null]}
           placeholder="placeholder@gmail.com"
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            setEmailError('');
+          }}
         />
+        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
       </View>
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Your Password</Text>
         <TextInput 
-          style={styles.input}
+          style={[styles.input, passwordError ? styles.inputError : null]}
           secureTextEntry
           placeholder="••••••••"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(text) => {
+            setPassword(text);
+            setPasswordError('');
+          }}
         />
+        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
       </View>
 
       <View style={styles.optionsRow}>
@@ -168,6 +192,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 13,
     fontSize: 16,
+  },
+  inputError: {
+    borderWidth: 1,
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 12,
+    marginTop: 4,
   },
   optionsRow: {
     flexDirection: 'row',
