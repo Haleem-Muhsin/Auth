@@ -1,4 +1,4 @@
-import { Platform, SafeAreaView, View } from "react-native";
+import { Platform, SafeAreaView, ScrollView, View } from "react-native";
 import { StyleSheet } from "react-native";
 import { useState } from "react";
 import SwitchTabs from "./components/SwitchTabs";
@@ -15,6 +15,7 @@ export default function index2() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View style={styles.container1}>
         <SwitchTabs onTabChange={handleTabChange} />
         {activeTab === 'signin' ? (
@@ -23,6 +24,7 @@ export default function index2() {
           <DriverSignupForm setActiveTab={setActiveTab} />
         )}
       </View>
+      </ScrollView>
       <View style={styles.container2}>
         <CustomerSetUp/>
       </View>
@@ -41,12 +43,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#DBE7C9",
   },
   container2: {
-    flex: 0.25,
+    flex: 1,
     alignItems: "center",
     marginHorizontal: 25,
     borderRadius: 20,
     backgroundColor: "#DBE7C9",
     maxHeight: 150,
+    padding: Platform.OS === "android" ? 10 : 10,
     marginBottom: Platform.OS === "android" ? 30 : 0,
   },
 });
