@@ -37,8 +37,8 @@ export default function Bookings() {
       params: {
         bookingId: booking.id,
         customerEmail: booking.customerId,
-        userLat: booking.customerLocation.latitude,
-        userLng: booking.customerLocation.longitude
+        userLat: booking.pickupLocation.latitude,
+        userLng: booking.pickupLocation.longitude
       }
     });
   };

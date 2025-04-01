@@ -18,7 +18,7 @@ export default function PendingRequests() {
     const q = query(
       bookingsRef,
       where('customerId', '==', auth.currentUser.email),
-      where('status', '==', 'pending')
+      where('status', 'in', ['pending', 'accepted'])
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -42,6 +42,17 @@ export default function PendingRequests() {
     } catch (error) {
       console.error('Error cancelling request:', error);
     }
+  };
+
+  const handleTrackAmbulance = (request: Booking & { id: string }) => {
+    router.push({
+      pathname: "/tracking",
+      params: {
+        ambulanceId: request.ambulanceId,
+        userLat: request.pickupLocation.latitude,
+        userLng: request.pickupLocation.longitude
+      }
+    });
   };
 
   if (loading) {
@@ -82,14 +93,27 @@ export default function PendingRequests() {
                 <Text style={styles.timestamp}>
                   Requested on: {new Date(request.timestamp).toLocaleString()}
                 </Text>
-                <Text style={styles.status}>Status: Pending</Text>
+                <Text style={styles.status}>Status: {request.status}</Text>
               </View>
-              <Pressable 
-                style={styles.cancelButton}
-                onPress={() => handleCancelRequest(request.id)}
-              >
-                <Ionicons name="close-circle" size={24} color="#ff4444" />
-              </Pressable>
+              <View style={styles.actionButtons}>
+                {request.status === 'accepted' && (
+                  <Pressable 
+                    style={styles.trackButton}
+                    onPress={() => handleTrackAmbulance(request)}
+                  >
+                    <Ionicons name="navigate" size={24} color="#294B29" />
+                    <Text style={styles.trackButtonText}>Track</Text>
+                  </Pressable>
+                )}
+                {request.status === 'pending' && (
+                  <Pressable 
+                    style={styles.cancelButton}
+                    onPress={() => handleCancelRequest(request.id)}
+                  >
+                    <Ionicons name="close-circle" size={24} color="#ff4444" />
+                  </Pressable>
+                )}
+              </View>
             </View>
           ))
         )}
@@ -176,5 +200,17 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     padding: 5
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  trackButton: {
+    padding: 5
+  },
+  trackButtonText: {
+    marginLeft: 5,
+    color: '#294B29',
+    fontWeight: '500'
   }
 }); 

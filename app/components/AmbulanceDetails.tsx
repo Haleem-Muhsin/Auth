@@ -65,12 +65,19 @@ export default function AmbulanceDetails({ ambulance, isVisible, onClose }: Ambu
       const bookingRef = doc(firestore, 'bookings', `${auth.currentUser.email}_${Date.now()}`);
       await setDoc(bookingRef, {
         customerId: auth.currentUser.email,
-        ambulanceId: ambulance.id,
+        ambulanceId: ambulance.id.replace(',', '.'),
         status: 'pending',
         timestamp: Date.now(),
-        customerLocation: {
+        vehicleType: ambulance.type,
+        pickupLocation: {
           latitude: location.coords.latitude,
-          longitude: location.coords.longitude
+          longitude: location.coords.longitude,
+          address: 'Current Location'
+        },
+        destinationLocation: {
+          latitude: 0,
+          longitude: 0,
+          address: ''
         }
       });
 

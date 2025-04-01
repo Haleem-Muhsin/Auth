@@ -79,6 +79,7 @@ export default function Home2() {
       snapshot.docChanges().forEach((change) => {
         if (change.type === 'added') {
           const booking = change.doc.data() as Booking;
+          console.log('New booking request received:', booking);
           Alert.alert(
             'New Booking Request',
             'A customer needs an ambulance. Accept the request?',
@@ -117,7 +118,7 @@ export default function Home2() {
         setIsActive(data.status === 'available');
       } else {
         console.log('No ambulance document found');
-        Alert.alert('Error', 'No ambulance details found');
+        Alert.alert('No ambulance details found');
       }
     } catch (error) {
       console.error('Error fetching ambulance details:', error);
@@ -244,8 +245,8 @@ export default function Home2() {
         params: { 
           bookingId,
           customerEmail: booking.customerId,
-          userLat: booking.customerLocation.latitude,
-          userLng: booking.customerLocation.longitude
+          userLat: booking.pickupLocation.latitude,
+          userLng: booking.pickupLocation.longitude
         }
       });
     } catch (error) {
