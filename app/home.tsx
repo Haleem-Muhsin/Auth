@@ -281,7 +281,7 @@ export default function Home() {
             try {
               await signOut(auth);
               await AsyncStorage.removeItem('rememberMe');
-              router.replace('/');
+              router.replace('/index1');
             } catch (error) {
               console.error('Error signing out:', error);
             }

@@ -1,14 +1,14 @@
-import { Platform, SafeAreaView, ScrollView, View, BackHandler } from "react-native";
+import { Platform, SafeAreaView, View, ScrollView, BackHandler, Alert } from "react-native";
 import { StyleSheet } from "react-native";
 import { useState } from "react";
 import SwitchTabs from "./components/SwitchTabs";
-import DriverLoginForm from "./components/Driver/DriverLoginForm";
-import DriverSignupForm from "./components/Driver/DriverSignupForm";
-import CustomerSetUp from "./components/Customer/CustomerSetUp";
+import LoginForm from "./components/Customer/LoginForm";
+import SignupForm from "./components/Customer/SignupForm";
+import DriverSetUp from "./components/Driver/DriverSetUp";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback } from "react";
 
-export default function index2() {
+export default function Index() {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const router = useRouter();
 
@@ -37,18 +37,18 @@ export default function index2() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-      <View style={styles.container1}>
-        <SwitchTabs onTabChange={handleTabChange} />
-        {activeTab === 'signin' ? (
-          <DriverLoginForm />
-        ) : (
-          <DriverSignupForm setActiveTab={setActiveTab} />
-        )}
-      </View>
+        <View style={styles.container1}>
+          <SwitchTabs onTabChange={handleTabChange} />
+          {activeTab === 'signin' ? (
+            <LoginForm />
+          ) : (
+            <SignupForm setActiveTab={setActiveTab} />
+          )}
+        </View>
       </ScrollView>
-      <View style={styles.container2}>
-        <CustomerSetUp/>
-      </View>
+        <View style={styles.container2}>
+          <DriverSetUp />
+        </View>
     </SafeAreaView>
   );
 }
