@@ -407,9 +407,18 @@ export default function Home() {
         <View style={styles.handle} />
         <View style={styles.contentContainer}>
           <View style={styles.headerContainer}>
-            <Pressable onPress={handleLogout} style={styles.userIcon}>
-              <Ionicons name="person-circle-outline" size={30} color="#294B29" />
-            </Pressable>
+            <View style={styles.headerLeft}>
+              <Pressable onPress={handleLogout} style={styles.userIcon}>
+                <Ionicons name="person-circle-outline" size={30} color="#294B29" />
+              </Pressable>
+              <Pressable 
+                style={styles.pendingRequestsButton}
+                onPress={() => router.push('/pending-requests')}
+              >
+                <Ionicons name="time-outline" size={24} color="#294B29" />
+                <Text style={styles.pendingRequestsText}>Pending Requests</Text>
+              </Pressable>
+            </View>
             <Pressable 
               style={styles.locationButton}
               onPress={handleFindLocation}
@@ -491,6 +500,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 15,
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1
+  },
   userIcon: {
     padding: 5,
   },
@@ -544,5 +558,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 2,
+  },
+  pendingRequestsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 8,
+    borderRadius: 8,
+    marginLeft: 10
+  },
+  pendingRequestsText: {
+    fontSize: 14,
+    color: '#294B29',
+    marginLeft: 5
   }
 }); 

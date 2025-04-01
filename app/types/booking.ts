@@ -3,8 +3,15 @@ export interface Booking {
   ambulanceId: string;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
   timestamp: number;
-  customerLocation: {
+  vehicleType?: string;
+  pickupLocation: {
     latitude: number;
     longitude: number;
+    address: string;
+  };
+  destinationLocation: {
+    latitude: number;
+    longitude: number;
+    address: string;
   };
 } 
