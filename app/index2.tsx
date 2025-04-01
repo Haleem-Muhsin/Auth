@@ -1,4 +1,4 @@
-import { SafeAreaView, View } from "react-native";
+import { Platform, SafeAreaView, View } from "react-native";
 import { StyleSheet } from "react-native";
 import { useState } from "react";
 import SwitchTabs from "./components/SwitchTabs";
@@ -47,5 +47,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#DBE7C9",
     maxHeight: 150,
+    marginBottom: Platform.OS === "android" ? 30 : 0,
   },
 });
