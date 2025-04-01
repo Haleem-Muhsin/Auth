@@ -82,12 +82,11 @@ export default function Home2() {
           console.log('New booking request received:', booking);
           Alert.alert(
             'New Booking Request',
-            'A customer needs an ambulance. Accept the request?',
+            'A customer needs an ambulance',
             [
-              { text: 'Reject', style: 'cancel' },
               { 
-                text: 'Accept',
-                onPress: () => handleAcceptBooking(change.doc.id, booking)
+                text: 'Booking Request',
+                onPress: () => router.push('/bookings')
               }
             ]
           );
@@ -207,7 +206,8 @@ export default function Home2() {
         status: editableDetails.status || 'offline',
         lastUpdated: Date.now(),
         latitude: ambulanceDetails?.latitude || 0,
-        longitude: ambulanceDetails?.longitude || 0
+        longitude: ambulanceDetails?.longitude || 0,
+        driverEmail: auth.currentUser.email
       };
 
       console.log('Saving update data:', updateData);
