@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, Alert, BackHandler } from "react-native";
 import Checkbox from 'expo-checkbox';
 import { useState, useEffect } from 'react';
 import { useRouter } from "expo-router";
@@ -14,6 +14,31 @@ export default function LoginForm() {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      Alert.alert(
+        'Sign Out',
+        'Are you sure you want to sign out?',
+        [
+          {
+            text: 'Cancel',
+            onPress: () => null,
+            style: 'cancel',
+          },
+          {
+            text: 'Sign Out',
+            onPress: handleSignOut,
+            style: 'destructive',
+          },
+        ],
+        { cancelable: true }
+      );
+      return true;
+    });
+
+    return () => backHandler.remove();
+  }, [router]);
 
   useEffect(() => {
     checkPersistedAuth();

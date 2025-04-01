@@ -1,4 +1,4 @@
-import { View, StyleSheet, SafeAreaView, Pressable, Alert, Dimensions, Animated, Text, ScrollView, BackHandler, Platform } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Pressable, Alert, Dimensions, Animated, Text, ScrollView, BackHandler, Platform, Linking } from 'react-native';
 import AmbulanceList from './components/AmbulanceList';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useNavigation } from 'expo-router';
@@ -7,10 +7,10 @@ import { signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { useEffect, useState, useRef } from 'react';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { Ambulance } from './types/ambulance';
 import * as Location from 'expo-location';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, set } from 'firebase/database';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 
@@ -188,28 +188,33 @@ export default function Home() {
   // Keep the Android back button handler
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      Alert.alert(
-        'Sign Out',
-        'Are you sure you want to sign out?',
-        [
-          {
-            text: 'Cancel',
-            onPress: () => null,
-            style: 'cancel',
-          },
-          {
-            text: 'Sign Out',
-            onPress: handleLogout,
-            style: 'destructive',
-          },
-        ],
-        { cancelable: true }
-      );
-      return true;
+      // Only show sign out prompt if we're on the home page and user is signed in
+      const currentUser = auth.currentUser;
+      if (currentUser && router.canGoBack()) {
+        Alert.alert(
+          'Sign Out',
+          'Are you sure you want to sign out?',
+          [
+            {
+              text: 'Cancel',
+              onPress: () => null,
+              style: 'cancel',
+            },
+            {
+              text: 'Sign Out',
+              onPress: handleLogout,
+              style: 'destructive',
+            },
+          ],
+          { cancelable: true }
+        );
+        return true;
+      }
+      return false;
     });
 
     return () => backHandler.remove();
-  }, []);
+  }, [router]);
 
   const handleLocationChange = async (from: string, to: string) => {
     try {
@@ -375,6 +380,88 @@ export default function Home() {
     }
   };
 
+  const handleSOS = async () => {
+    try {
+      // Get current location
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is required for emergency services.');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const userLocation = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude
+      };
+
+      // Find nearest available ambulance
+      let nearestAmbulance: Ambulance | null = null;
+      let shortestDistance = Infinity;
+
+      for (const ambulance of ambulances) {
+        if (ambulance.status === 'available' && driverLocations[ambulance.driverEmail]) {
+          const driverLocation = driverLocations[ambulance.driverEmail];
+          const distance = calculateDistance(
+            userLocation.latitude,
+            userLocation.longitude,
+            driverLocation.latitude,
+            driverLocation.longitude
+          );
+
+          if (distance < shortestDistance) {
+            shortestDistance = distance;
+            nearestAmbulance = ambulance;
+          }
+        }
+      }
+
+      if (!nearestAmbulance) {
+        Alert.alert('No Ambulances', 'No available ambulances found nearby. Please try again or call emergency services directly.');
+        return;
+      }
+
+      // Book the ambulance
+      const ambulanceRef = doc(firestore, 'ambulances', nearestAmbulance.id);
+      await updateDoc(ambulanceRef, {
+        status: 'booked',
+        currentCustomer: auth.currentUser?.email,
+        pickupLocation: userLocation
+      });
+
+      // Place call to ambulance
+      const phoneNumber = nearestAmbulance.phoneNumber || '911'; // Fallback to emergency services
+      const url = `tel:${phoneNumber}`;
+      
+      Alert.alert(
+        'Emergency Response',
+        `Ambulance has been dispatched to your location. Connecting call to ${phoneNumber}...`,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {
+            text: 'Call Now',
+            onPress: () => {
+              Linking.canOpenURL(url)
+                .then(supported => {
+                  if (supported) {
+                    return Linking.openURL(url);
+                  }
+                })
+                .catch(err => console.error('Error placing call:', err));
+            },
+            style: 'destructive'
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error handling SOS:', error);
+      Alert.alert('Error', 'Failed to process emergency request. Please call emergency services directly.');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.mapContainer}>
@@ -479,6 +566,14 @@ export default function Home() {
           )}
         </View>
       </Animated.View>
+
+      <Pressable
+        style={styles.sosButton}
+        onPress={handleSOS}
+      >
+        <Ionicons name="warning" size={24} color="white" />
+        <Text style={styles.sosText}>SOS</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -612,5 +707,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#294B29',
     marginLeft: 5
-  }
+  },
+  sosButton: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 20 : 60,
+    right: 20,
+    backgroundColor: '#FF3B30',
+    borderRadius: 25,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  sosText: {
+    color: 'white',
+    fontWeight: 'bold',
+    marginLeft: 5,
+    fontSize: 16,
+  },
 }); 
