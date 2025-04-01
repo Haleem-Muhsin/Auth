@@ -1,10 +1,10 @@
-import { View, StyleSheet, SafeAreaView, Pressable, Alert, Text, Modal, TextInput, ScrollView } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Pressable, Alert, Text, Modal, TextInput, ScrollView, BackHandler, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation, useFocusEffect } from 'expo-router';
 import { auth, firestore, database } from './firebase';
 import { signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, updateDoc, setDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
 import type { Ambulance } from './types/ambulance';
 import React from 'react';
@@ -14,6 +14,7 @@ import type { Booking } from './types/booking';
 
 export default function Home2() {
   const router = useRouter();
+  const navigation = useNavigation();
   const [ambulanceDetails, setAmbulanceDetails] = useState<Ambulance | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isActive, setIsActive] = useState(false);
@@ -264,6 +265,43 @@ export default function Home2() {
     });
 
     return () => unsubscribe();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS === 'ios') {
+        // Disable the swipe back gesture
+        navigation.setOptions({
+          gestureEnabled: false,
+        });
+      }
+    }, [navigation])
+  );
+
+  // Keep the Android back button handler
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      Alert.alert(
+        'Sign Out',
+        'Are you sure you want to sign out?',
+        [
+          {
+            text: 'Cancel',
+            onPress: () => null,
+            style: 'cancel',
+          },
+          {
+            text: 'Sign Out',
+            onPress: handleLogout,
+            style: 'destructive',
+          },
+        ],
+        { cancelable: true }
+      );
+      return true;
+    });
+
+    return () => backHandler.remove();
   }, []);
 
   return (

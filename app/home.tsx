@@ -1,7 +1,7 @@
-import { View, StyleSheet, SafeAreaView, Pressable, Alert, Dimensions, Animated, Text, ScrollView } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Pressable, Alert, Dimensions, Animated, Text, ScrollView, BackHandler, Platform } from 'react-native';
 import AmbulanceList from './components/AmbulanceList';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { auth, firestore, database } from './firebase';
 import { signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,6 +11,8 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { Ambulance } from './types/ambulance';
 import * as Location from 'expo-location';
 import { ref, onValue } from 'firebase/database';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 
 interface Coordinates {
   latitude: number;
@@ -133,6 +135,7 @@ const customMapStyle = [
 
 export default function Home() {
   const router = useRouter();
+  const navigation = useNavigation();
   const [ambulances, setAmbulances] = useState<Ambulance[]>([]);
   const [fromCoords, setFromCoords] = useState<Coordinates | null>(null);
   const [toCoords, setToCoords] = useState<Coordinates | null>(null);
@@ -169,6 +172,43 @@ export default function Home() {
     });
 
     return () => unsubscribe();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS === 'ios') {
+        // Disable the swipe back gesture
+        navigation.setOptions({
+          gestureEnabled: false,
+        });
+      }
+    }, [navigation])
+  );
+
+  // Keep the Android back button handler
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      Alert.alert(
+        'Sign Out',
+        'Are you sure you want to sign out?',
+        [
+          {
+            text: 'Cancel',
+            onPress: () => null,
+            style: 'cancel',
+          },
+          {
+            text: 'Sign Out',
+            onPress: handleLogout,
+            style: 'destructive',
+          },
+        ],
+        { cancelable: true }
+      );
+      return true;
+    });
+
+    return () => backHandler.remove();
   }, []);
 
   const handleLocationChange = async (from: string, to: string) => {
