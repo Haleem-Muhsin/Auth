@@ -1,6 +1,7 @@
 interface Ambulance {
   id: string;  // This will be the number plate
   driver: string;
+  driverEmail: string;  // Driver's email address
   hospital: string;
   phoneNumber: string;
   status: 'available' | 'busy' | 'offline';

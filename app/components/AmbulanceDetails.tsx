@@ -65,7 +65,7 @@ export default function AmbulanceDetails({ ambulance, isVisible, onClose }: Ambu
       const bookingRef = doc(firestore, 'bookings', `${auth.currentUser.email}_${Date.now()}`);
       await setDoc(bookingRef, {
         customerId: auth.currentUser.email,
-        ambulanceId: ambulance.id.replace(',', '.'),
+        ambulanceId: ambulance.driverEmail,
         status: 'pending',
         timestamp: Date.now(),
         vehicleType: ambulance.type,

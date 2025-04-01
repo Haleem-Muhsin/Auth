@@ -149,6 +149,7 @@ export default function Home() {
     const unsubscribe = onSnapshot(ambulancesRef, (snapshot) => {
       const ambulanceData = snapshot.docs.map(doc => ({
         id: doc.id,
+        driverEmail: doc.id,
         ...doc.data()
       })) as Ambulance[];
       
