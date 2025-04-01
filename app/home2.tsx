@@ -11,15 +11,24 @@ import React from 'react';
 import * as Location from 'expo-location';
 import { ref, set } from 'firebase/database';
 import type { Booking } from './types/booking';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function Home2() {
   const router = useRouter();
   const navigation = useNavigation();
   const [ambulanceDetails, setAmbulanceDetails] = useState<Ambulance | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingDates, setIsEditingDates] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [editableDetails, setEditableDetails] = useState<Partial<Ambulance>>({});
   const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState({
+    insuranceStart: false,
+    insuranceEnd: false,
+    pollutionEnd: false,
+    currentDate: new Date(),
+    position: { x: 0, y: 0 }
+  });
 
   const ambulanceTypes = ['Basic', 'Advanced', 'ICU'] as const;
   const statusTypes = ['available', 'busy', 'offline'] as const;
@@ -27,6 +36,45 @@ export default function Home2() {
   useEffect(() => {
     fetchAmbulanceDetails();
   }, []);
+
+  useEffect(() => {
+    if (ambulanceDetails) {
+      const now = Date.now();
+      const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+
+      // Check insurance end date
+      if (ambulanceDetails.insuranceEndDate) {
+        const daysUntilInsuranceExpiry = (ambulanceDetails.insuranceEndDate - now) / (24 * 60 * 60 * 1000);
+        if (daysUntilInsuranceExpiry <= 30 && daysUntilInsuranceExpiry > 0) {
+          Alert.alert(
+            'Insurance Expiring Soon',
+            `Your insurance will expire in ${Math.ceil(daysUntilInsuranceExpiry)} days. Please renew it soon.`
+          );
+        } else if (daysUntilInsuranceExpiry <= 0) {
+          Alert.alert(
+            'Insurance Expired',
+            'Your insurance has expired. Please renew it immediately.'
+          );
+        }
+      }
+
+      // Check pollution end date
+      if (ambulanceDetails.pollutionEndDate) {
+        const daysUntilPollutionExpiry = (ambulanceDetails.pollutionEndDate - now) / (24 * 60 * 60 * 1000);
+        if (daysUntilPollutionExpiry <= 30 && daysUntilPollutionExpiry > 0) {
+          Alert.alert(
+            'Pollution Check Expiring Soon',
+            `Your pollution check will expire in ${Math.ceil(daysUntilPollutionExpiry)} days. Please get it renewed soon.`
+          );
+        } else if (daysUntilPollutionExpiry <= 0) {
+          Alert.alert(
+            'Pollution Check Expired',
+            'Your pollution check has expired. Please get it renewed immediately.'
+          );
+        }
+      }
+    }
+  }, [ambulanceDetails]);
 
   useEffect(() => {
     let locationSubscription: Location.LocationSubscription;
@@ -208,7 +256,10 @@ export default function Home2() {
         lastUpdated: Date.now(),
         latitude: ambulanceDetails?.latitude || 0,
         longitude: ambulanceDetails?.longitude || 0,
-        driverEmail: auth.currentUser.email
+        driverEmail: auth.currentUser.email,
+        insuranceStartDate: editableDetails.insuranceStartDate || Date.now(),
+        insuranceEndDate: editableDetails.insuranceEndDate || Date.now() + (365 * 24 * 60 * 60 * 1000), // Default to 1 year from now
+        pollutionEndDate: editableDetails.pollutionEndDate || Date.now() + (180 * 24 * 60 * 60 * 1000) // Default to 6 months from now
       };
 
       console.log('Saving update data:', updateData);
@@ -330,6 +381,13 @@ export default function Home2() {
               </View>
 
               <View style={styles.detailRow}>
+                <Ionicons name="person" size={24} color="#294B29" />
+                <Text style={styles.detailText}>
+                  Driver: {ambulanceDetails.driver}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
                 <Ionicons name="medical" size={24} color="#294B29" />
                 <Text style={styles.detailText}>
                   Type: {ambulanceDetails.type || 'Basic'}
@@ -348,6 +406,43 @@ export default function Home2() {
                 <Text style={styles.detailText}>
                   Contact: {ambulanceDetails.phoneNumber}
                 </Text>
+              </View>
+
+              <View style={styles.documentDetailsContainer}>
+                <View style={styles.documentHeader}>
+                  <Ionicons name="document-text" size={24} color="#294B29" />
+                  <Text style={styles.documentTitle}>Document Details</Text>
+                  <Pressable 
+                    onPress={() => {
+                      setEditableDetails({
+                        ...editableDetails,
+                        insuranceStartDate: ambulanceDetails.insuranceStartDate,
+                        insuranceEndDate: ambulanceDetails.insuranceEndDate,
+                        pollutionEndDate: ambulanceDetails.pollutionEndDate
+                      });
+                      setIsEditingDates(true);
+                    }}
+                    style={styles.editIconButton}
+                  >
+                    <Ionicons name="pencil" size={20} color="#294B29" />
+                  </Pressable>
+                </View>
+                
+                <View style={styles.documentContent}>
+                  <View style={styles.documentRow}>
+                    <Ionicons name="shield-checkmark" size={20} color="#294B29" />
+                    <Text style={styles.documentText}>
+                      Insurance: {new Date(ambulanceDetails.insuranceStartDate).toLocaleDateString()} - {new Date(ambulanceDetails.insuranceEndDate).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.documentRow}>
+                    <Ionicons name="leaf" size={20} color="#294B29" />
+                    <Text style={styles.documentText}>
+                      Pollution Check: Valid until {new Date(ambulanceDetails.pollutionEndDate).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
               </View>
 
               <Pressable 
@@ -505,6 +600,120 @@ export default function Home2() {
         </View>
       </Modal>
 
+      {/* Add this new modal for editing dates */}
+      <Modal
+        visible={isEditingDates}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsEditingDates(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Document Dates</Text>
+              <Pressable onPress={() => setIsEditingDates(false)} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#294B29" />
+              </Pressable>
+            </View>
+
+            <ScrollView>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Insurance Start Date</Text>
+                <View style={styles.dateInputContainer}>
+                  <Text style={styles.dateText}>
+                    {editableDetails.insuranceStartDate 
+                      ? new Date(editableDetails.insuranceStartDate).toLocaleDateString()
+                      : 'Select Insurance Start Date'}
+                  </Text>
+                  <Pressable 
+                    onPress={() => {
+                      const currentDate = editableDetails.insuranceStartDate 
+                        ? new Date(editableDetails.insuranceStartDate)
+                        : new Date();
+                      setShowDatePicker({
+                        ...showDatePicker,
+                        insuranceStart: true,
+                        currentDate
+                      });
+                    }}
+                    style={styles.calendarIconButton}
+                  >
+                    <Ionicons name="calendar" size={20} color="#294B29" />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Insurance End Date</Text>
+                <View style={styles.dateInputContainer}>
+                  <Text style={styles.dateText}>
+                    {editableDetails.insuranceEndDate 
+                      ? new Date(editableDetails.insuranceEndDate).toLocaleDateString()
+                      : 'Select Insurance End Date'}
+                  </Text>
+                  <Pressable 
+                    onPress={() => {
+                      const currentDate = editableDetails.insuranceEndDate 
+                        ? new Date(editableDetails.insuranceEndDate)
+                        : new Date();
+                      setShowDatePicker({
+                        ...showDatePicker,
+                        insuranceEnd: true,
+                        currentDate
+                      });
+                    }}
+                    style={styles.calendarIconButton}
+                  >
+                    <Ionicons name="calendar" size={20} color="#294B29" />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Pollution End Date</Text>
+                <View style={styles.dateInputContainer}>
+                  <Text style={styles.dateText}>
+                    {editableDetails.pollutionEndDate 
+                      ? new Date(editableDetails.pollutionEndDate).toLocaleDateString()
+                      : 'Select Pollution End Date'}
+                  </Text>
+                  <Pressable 
+                    onPress={() => {
+                      const currentDate = editableDetails.pollutionEndDate 
+                        ? new Date(editableDetails.pollutionEndDate)
+                        : new Date();
+                      setShowDatePicker({
+                        ...showDatePicker,
+                        pollutionEnd: true,
+                        currentDate
+                      });
+                    }}
+                    style={styles.calendarIconButton}
+                  >
+                    <Ionicons name="calendar" size={20} color="#294B29" />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.buttonContainer}>
+                <Pressable 
+                  style={[styles.button, styles.cancelButton]} 
+                  onPress={() => setIsEditingDates(false)}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </Pressable>
+                <Pressable 
+                  style={[styles.button, styles.saveButton]} 
+                  onPress={handleSaveDetails}
+                >
+                  <Text style={styles.buttonText}>Save</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       <Pressable 
         style={styles.bookingsButton} 
         onPress={() => router.push('/bookings')}
@@ -567,7 +776,6 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 20,
   },
   statusButtonText: {
     color: '#fff',
@@ -680,5 +888,79 @@ const styles = StyleSheet.create({
   },
   modalForm: {
     paddingBottom: 20,
+  },
+  dateInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: '#f8f8f8',
+  },
+  dateText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  calendarIconButton: {
+    padding: 5,
+    marginLeft: 10,
+  },
+  datePickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  datePickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  editIconButton: {
+    padding: 5,
+    marginLeft: 10,
+  },
+  documentDetailsContainer: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 15,
+    marginTop: 10,
+  },
+  documentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    gap: 10,
+  },
+  documentTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#294B29',
+    flex: 1,
+  },
+  documentContent: {
+    gap: 12,
+  },
+  documentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  documentText: {
+    fontSize: 16,
+    color: '#333',
+    flex: 1,
   },
 });

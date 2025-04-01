@@ -9,6 +9,9 @@ interface Ambulance {
   latitude: number;
   longitude: number;
   lastUpdated: number;
+  insuranceStartDate: number;  // Unix timestamp
+  insuranceEndDate: number;    // Unix timestamp
+  pollutionEndDate: number;    // Unix timestamp
 }
 
 export default Ambulance;
