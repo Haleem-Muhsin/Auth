@@ -601,12 +601,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   pendingRequestsButton: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     backgroundColor: '#fff',
     padding: 8,
     borderRadius: 8,
-    marginLeft: 10
+    marginLeft: Platform.OS === 'android' ? 15 : 10
   },
   pendingRequestsText: {
     fontSize: 14,
