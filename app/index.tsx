@@ -1,13 +1,56 @@
-import { Platform, SafeAreaView, View, ScrollView } from "react-native";
+import { Platform, SafeAreaView, View, ScrollView, BackHandler, Alert } from "react-native";
 import { StyleSheet } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SwitchTabs from "./components/SwitchTabs";
 import LoginForm from "./components/Customer/LoginForm";
 import SignupForm from "./components/Customer/SignupForm";
 import DriverSetUp from "./components/Driver/DriverSetUp";
+import { auth } from './firebase';
+import { signOut } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from "expo-router";
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+  const router = useRouter();
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (auth.currentUser) {
+        Alert.alert(
+          'Sign Out',
+          'Are you sure you want to sign out?',
+          [
+            {
+              text: 'Cancel',
+              onPress: () => null,
+              style: 'cancel',
+            },
+            {
+              text: 'Sign Out',
+              onPress: handleSignOut,
+              style: 'destructive',
+            },
+          ],
+          { cancelable: true }
+        );
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      await AsyncStorage.removeItem('rememberMe');
+      router.replace('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   const handleTabChange = (tab: 'signin' | 'signup') => {
     setActiveTab(tab);
