@@ -3,7 +3,7 @@ import Checkbox from 'expo-checkbox';
 import { useState, useEffect } from 'react';
 import { useRouter } from "expo-router";
 import { auth } from '../../firebase';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function DriverLoginForm() {
@@ -99,6 +99,34 @@ export default function DriverLoginForm() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setEmailError('Please enter your email address');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert(
+        'Reset Email Sent',
+        'Please check your email for password reset instructions.',
+        [{ text: 'OK' }]
+      );
+    } catch (error: any) {
+      const errorMessage = error.message;
+      if (errorMessage.includes('user-not-found')) {
+        setEmailError('No account found with this email');
+      } else if (errorMessage.includes('invalid-email')) {
+        setEmailError('Invalid email format');
+      } else {
+        Alert.alert('Error', 'Could not send reset email. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome back!</Text>
@@ -145,8 +173,10 @@ export default function DriverLoginForm() {
           />
           <Text style={styles.rememberText}>Remember me</Text>
         </View>
-        <Pressable>
-          <Text style={styles.forgotPassword}>Forgot password?</Text>
+        <Pressable onPress={handleForgotPassword} disabled={loading}>
+          <Text style={[styles.forgotPassword, loading && { opacity: 0.5 }]}>
+            Forgot password?
+          </Text>
         </Pressable>
       </View>
 
