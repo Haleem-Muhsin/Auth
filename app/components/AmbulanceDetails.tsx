@@ -83,7 +83,7 @@ export default function AmbulanceDetails({ ambulance, isVisible, onClose }: Ambu
             text: 'Confirm', 
             onPress: () => {
               router.push({
-                pathname: "/tracking",
+                pathname: "/pending-requests",
                 params: { 
                   ambulanceId: ambulance.id,
                   userLat: location.coords.latitude,
