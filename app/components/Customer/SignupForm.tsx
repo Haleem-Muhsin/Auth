@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, Alert, Modal } from "react-native";
 import Checkbox from 'expo-checkbox';
 import { useState } from 'react';
 import { useRouter } from "expo-router";
@@ -18,6 +18,7 @@ export default function SignupForm({ setActiveTab }: SignupFormProps) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [showTerms, setShowTerms] = useState(false);
 
   // Password validation states
   const [hasMinLength, setHasMinLength] = useState(false);
@@ -123,9 +124,48 @@ export default function SignupForm({ setActiveTab }: SignupFormProps) {
             onValueChange={setIsChecked}
             color={isChecked ? '#007AFF' : undefined}
           />
-          <Text style={styles.rememberText}>I agree to the Terms & Conditions</Text>
+          <Pressable onPress={() => setShowTerms(true)}>
+            <Text style={styles.rememberText}>I agree to the <Text style={styles.termsText}>Terms & Conditions</Text></Text>
+          </Pressable>
         </View>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showTerms}
+        onRequestClose={() => setShowTerms(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Terms & Conditions</Text>
+              <Pressable 
+                style={styles.closeIcon}
+                onPress={() => setShowTerms(false)}
+              >
+                <Text style={styles.closeIconText}>✕</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.modalText}>
+              1. Service Description{'\n'}
+              MediMove provides an ambulance booking platform connecting patients with healthcare transportation services.{'\n\n'}
+              2. User Responsibilities{'\n'}
+              - Provide accurate information{'\n'}
+              - Use the service for legitimate medical transportation needs{'\n'}
+              - Maintain confidentiality of account credentials{'\n\n'}
+              3. Privacy & Data{'\n'}
+              We collect and process personal data as outlined in our Privacy Policy, including location data for service functionality.{'\n\n'}
+              4. Payment Terms{'\n'}
+              Users agree to pay for services through our approved payment methods.{'\n\n'}
+              5. Liability{'\n'}
+              MediMove acts as a platform provider and is not liable for third-party services.{'\n\n'}
+              6. Service Availability{'\n'}
+              We strive to maintain service availability but cannot guarantee uninterrupted access.
+            </Text>
+          </View>
+        </View>
+      </Modal>
 
       <Pressable 
         style={[styles.signInButton, loading && styles.disabledButton]}
@@ -220,5 +260,47 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#CCCCCC',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#294B29',
+  },
+  modalText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  closeIcon: {
+    padding: 8,
+  },
+  closeIconText: {
+    color: '#294B29',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  termsText: {
+    color: '#294B29',
+    textDecorationLine: 'underline',
   },
 }); 

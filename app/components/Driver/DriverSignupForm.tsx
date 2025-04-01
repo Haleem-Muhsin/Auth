@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, StyleSheet, Alert, ScrollView } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, Alert, ScrollView, Modal } from "react-native";
 import Checkbox from 'expo-checkbox';
 import { useState } from 'react';
 import { useRouter } from "expo-router";
@@ -18,6 +18,7 @@ export default function DriverSignupForm({ setActiveTab }: SignupFormProps) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [showTerms, setShowTerms] = useState(false);
 
   // Password validation states
   const [hasMinLength, setHasMinLength] = useState(false);
@@ -123,9 +124,49 @@ export default function DriverSignupForm({ setActiveTab }: SignupFormProps) {
             onValueChange={setIsChecked}
             color={isChecked ? '#007AFF' : undefined}
           />
-          <Text style={styles.rememberText}>I agree to the Terms & Conditions</Text>
+          <Pressable onPress={() => setShowTerms(true)}>
+            <Text style={styles.rememberText}>I agree to the <Text style={styles.termsText}>Terms & Conditions</Text></Text>
+          </Pressable>
         </View>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showTerms}
+        onRequestClose={() => setShowTerms(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Terms & Conditions for Drivers</Text>
+              <Pressable 
+                style={styles.closeIcon}
+                onPress={() => setShowTerms(false)}
+              >
+                <Text style={styles.closeIconText}>✕</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.modalText}>
+              1. Service Description{'\n'}
+              MediMove connects qualified ambulance drivers with patients needing medical transportation.{'\n\n'}
+              2. Driver Responsibilities{'\n'}
+              - Maintain valid licenses and certifications{'\n'}
+              - Keep vehicle clean and well-maintained{'\n'}
+              - Respond promptly to booking requests{'\n'}
+              - Follow all traffic and safety regulations{'\n\n'}
+              3. Privacy & Data{'\n'}
+              Drivers must protect patient confidentiality and handle personal information according to privacy laws.{'\n\n'}
+              4. Payment Terms{'\n'}
+              Commission structure and payment processing as per driver agreement.{'\n\n'}
+              5. Liability{'\n'}
+              Drivers must maintain appropriate insurance coverage and follow safety protocols.{'\n\n'}
+              6. Service Standards{'\n'}
+              Maintain professional conduct and provide timely, reliable service.
+            </Text>
+          </View>
+        </View>
+      </Modal>
 
       <Pressable 
         style={[styles.signInButton, loading && styles.disabledButton]}
@@ -220,5 +261,47 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#CCCCCC',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#294B29',
+  },
+  modalText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  closeIcon: {
+    padding: 8,
+  },
+  closeIconText: {
+    color: '#294B29',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  termsText: {
+    color: '#294B29',
+    textDecorationLine: 'underline',
   },
 }); 
